@@ -8,9 +8,9 @@
 
 using namespace std;
 
-typedef struct Bits {
-    int ref;
-    int dirty;
+typedef struct Bits { // You can use both reference and dirty bits
+    int ref; // reference bit
+    int dirty; // dirty bit
 } Bits;
 
 class PageReplacement {
