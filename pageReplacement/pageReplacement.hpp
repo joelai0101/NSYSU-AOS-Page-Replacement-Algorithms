@@ -33,7 +33,7 @@ private:
     string fileName;
     vector<vector<int>> pages;
     
-    int findMinRef(const vector<int> &memory, unordered_map<int, Bits> &memortBits); // Find a victim for ARB
+    int findMinRefBit(const vector<int> &memory, unordered_map<int, Bits> &memortBits); // Find a victim for ARB
     void updateARB(const vector<int> &memory, unordered_map<int, Bits> &memortBits, unordered_set<int> &memoryHit); // For ARB
 };
 
