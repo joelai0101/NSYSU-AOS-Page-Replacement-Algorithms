@@ -17,7 +17,7 @@ int main(int argc, const char * argv[]) {
 
     vector<int> memorySize = {20, 40, 60, 80, 100}; // Number of frames in the physical memory
     vector<string> fileName = {"random_reference_string.txt", "locality_reference_string.txt"};
-    vector<string> algorithmName = {"FIFO", "ARB"};
+    vector<string> algorithmName = {"FIFO", "SecondChance", "EnhancedSecondChance", "Optimal", "ARB"}; // {"FIFO", "ARB"}
 
     // generate three test reference strings:
     ReferenceStringGenerator generator(dataSize, referenceSize, dirtyRate);
@@ -46,6 +46,15 @@ int main(int argc, const char * argv[]) {
             performance = pageReplacement.FIFO();
             performance.printReport();
             
+            performance = pageReplacement.SecondChance();
+            performance.printReport();
+
+            performance = pageReplacement.EnhancedSecondChance();
+            performance.printReport();
+
+            performance = pageReplacement.Optimal();
+            performance.printReport();
+
             performance = pageReplacement.ARB(setSize);
             performance.printReport();
 

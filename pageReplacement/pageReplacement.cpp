@@ -53,7 +53,6 @@ PerformanceReport PageReplacement::FIFO() {
 
     // Execute FIFO algorithm
     for (const auto &p : pages) {
-        // Column 0 is a page number and column 1 is a dirty bit.
         const int pageNumber = p[0];
         const int dirty = p[1];
 
@@ -77,8 +76,7 @@ PerformanceReport PageReplacement::FIFO() {
                     ++performance.diskWrites;
                 }
 
-                memoryMap[victim] = {0, 0};
-                memoryMap[victim].ref = 0; // set reference bit to 0
+                memoryMap[victim] = {0, 0}; // Set reference and dirty bit to 0
 
                 // Add a new page into the memory.
                 memoryPageFrames.push(pageNumber);
@@ -88,7 +86,9 @@ PerformanceReport PageReplacement::FIFO() {
 
             ++performance.pageFaults;
             // Need to write into the disk
-        } else if (memoryMap[pageNumber].dirty == 0 && dirty == 1) { memoryMap[pageNumber].dirty = dirty; }
+        } else if (memoryMap[pageNumber].dirty == 0 && dirty == 1) { 
+            memoryMap[pageNumber].dirty = dirty; 
+        }
         
         // printQueue(memoryPageFrames);
     }
@@ -96,11 +96,196 @@ PerformanceReport PageReplacement::FIFO() {
     return performance;
 }
 
+PerformanceReport PageReplacement::SecondChance() {
+    performance.reset();
+    performance.algorithmName = "SecondChance";
+    deque<int> memoryPageFrames;
+    unordered_set<int> memorySet;
+    unordered_map<int, Bits> memoryMap;
+
+    // Execute SecondChance algorithm
+    for (const auto &p : pages) {
+        const int pageNumber = p[0];
+        const int dirty = p[1];
+
+        // Check if the page exists in memory with Hash Set
+        if (memorySet.find(pageNumber) == memorySet.end()) { 
+            if (memoryPageFrames.size() < memorySize) {
+                memoryPageFrames.push_back(pageNumber);
+                memorySet.insert(pageNumber);
+                memoryMap[pageNumber] = {1, dirty};
+            } else {
+                // A memory is full and the page isn't found in the memory.
+                // Choose and Remove a victim page from the memory.
+
+                const int victim = memoryPageFrames.front(); // FIFO
+                while (memoryMap[victim].ref == 1) {
+                    memoryMap[victim].ref = 0;
+                    memoryPageFrames.pop_front();
+                    memoryPageFrames.push_back(victim);
+                }
+                
+                memoryPageFrames.pop_front();
+                memorySet.erase(victim);
+
+                if (memoryMap[victim].dirty == 1) { // Write back into the disk.
+                    ++performance.interrupts;
+                    ++performance.diskWrites;
+                }
+
+                memoryMap[victim] = {0, 0};
+
+                memoryPageFrames.push_back(pageNumber);
+                memorySet.insert(pageNumber);
+                memoryMap[pageNumber] = {1, dirty};
+            }
+
+            ++performance.pageFaults;
+            // Need to write into the disk
+        } else if (memoryMap[pageNumber].dirty == 0 && dirty == 1) { 
+            memoryMap[pageNumber].dirty = dirty; 
+        }
+        
+        // printQueue(memoryPageFrames);
+    }
+
+    return performance;
+}
+
+PerformanceReport PageReplacement::EnhancedSecondChance() {
+    performance.reset();
+    performance.algorithmName = "EnhancedSecondChance";
+    deque<int> memoryPageFrames;
+    unordered_set<int> memorySet;
+    unordered_map<int, Bits> memoryMap;
+
+    // Execute Enhanced Second Chance algorithm
+    for (const auto &p : pages) {
+        const int pageNumber = p[0];
+        const int dirty = p[1];
+
+        // Check if the page exists in memory with Hash Set
+        if (memorySet.find(pageNumber) == memorySet.end()) { 
+            if (memoryPageFrames.size() < memorySize) {
+                memoryPageFrames.push_back(pageNumber);
+                memorySet.insert(pageNumber);
+                memoryMap[pageNumber] = {1, dirty};
+            } else {
+                // A memory is full and the page isn't found in the memory.
+                // Choose and Remove a victim page from the memory.
+
+                // Memory is full and the page isn't found in the memory.
+                // Choose and remove a victim page from the memory.
+                int victim = -1;
+                unsigned int minOrderPair = UINT_MAX;
+
+                for (int page : memoryPageFrames) {
+                    Bits bits = memoryMap[page];
+                    unsigned int orderPair = (bits.ref << 1) | bits.dirty;
+
+                    if (orderPair < minOrderPair) {
+                        victim = page;
+                        minOrderPair = orderPair;
+                    }
+                }
+                
+                // If multiple pages have the same minimum order pair, choose the victim based on FIFO.
+                if (victim == -1) {
+                    victim = memoryPageFrames.front();
+                }
+
+                // Remove the victim page from memory.
+                memorySet.erase(victim);
+
+                if (memoryMap[victim].dirty == 1) { // Write back into the disk.
+                    ++performance.interrupts;
+                    ++performance.diskWrites;
+                }
+
+                memoryMap[victim] = {0, 0};
+
+                memoryPageFrames.push_back(pageNumber);
+                memorySet.insert(pageNumber);
+                memoryMap[pageNumber] = {1, dirty};
+            }
+
+            ++performance.pageFaults;
+            // Need to write into the disk
+        } else if (memoryMap[pageNumber].dirty == 0 && dirty == 1) { 
+            memoryMap[pageNumber].dirty = dirty; 
+        }
+        
+        // printQueue(memoryPageFrames);
+    }
+
+    return performance;
+}
+
+// Optimal algorithm
+PerformanceReport PageReplacement::Optimal() {
+    performance.reset();
+    performance.algorithmName = "Optimal";
+    vector<int> memoryPageFrames;
+    unordered_map<int, Bits> memoryMap;
+    
+    // 1. Execute optimal algorithm.
+    for (int i = 0; i < pages.size(); ++i) {
+        const int pageNumber = pages[i][0];
+        const int dirty = pages[i][1];
+        
+        if (find(memoryPageFrames.begin(), memoryPageFrames.end(), pageNumber) == memoryPageFrames.end()) {
+            if (memoryPageFrames.size() < memorySize) {
+                memoryPageFrames.push_back(pageNumber);
+
+                memoryMap[pageNumber] = {1, dirty};
+            } else {
+
+                const int j = predict(i + 1, memoryPageFrames);
+                const int victim = memoryPageFrames[j];
+                memoryPageFrames[j] = pageNumber;
+                memoryMap[pageNumber] = {1, dirty};
+                if (memoryMap[victim].dirty == 1) {
+                    ++performance.diskWrites;
+                    ++performance.interrupts;
+                }
+                memoryMap[victim] = {0, 0};
+            }
+            ++performance.pageFaults;
+        } else if (memoryMap[pageNumber].dirty == 0 && dirty == 1) { 
+            memoryMap[pageNumber].dirty = dirty; 
+        }
+        // printVec(memory);
+    }
+    return performance;
+}
+
+// Find a victim for optimal
+int PageReplacement::predict(const int index, const vector<int> &memory){
+    int pre = -1, farthest = index;
+    for (int i = 0; i < memory.size(); ++i) {
+        int j;
+        // Store the index (j) of pages which are going to be used recently in future
+        for (j = index; j < pages.size(); ++j) {
+            if (memory[i] == pages[j][0]) {
+                if (j > farthest) {
+                    farthest = j;
+                    pre = i;
+                }
+                break;
+            }
+        }
+        // If a page is never used in future, return it.
+        if (j == pages.size()) {return i;}
+    }
+    // If all of the frames were not in future, return any of them, we return 0.
+    // Otherwise we return pre.
+    return pre == -1 ? 0 : pre;
+}
+
 // Additional-reference-bits (ARB) algorithm
 // An additional reference bit is used to determine the victim, 
 // usually using 8 bits and updating the ARB for all pages in memory
 PerformanceReport PageReplacement::ARB(const int interval) {
-    // init
     performance.reset();
     performance.algorithmName = "ARB";
     int count = 0;
@@ -146,7 +331,9 @@ PerformanceReport PageReplacement::ARB(const int interval) {
 
         } else {
             memoryHits.insert(pageNumber);
-            if (memoryMap[pageNumber].dirty == 0 && dirty == 1) { memoryMap[pageNumber].dirty = dirty; }
+            if (memoryMap[pageNumber].dirty == 0 && dirty == 1) { 
+                memoryMap[pageNumber].dirty = dirty; 
+            }
         }
         // printVector(memoryPageFrames);
         

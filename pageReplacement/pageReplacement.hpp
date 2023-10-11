@@ -25,7 +25,9 @@ public:
     // Algorithms
     PerformanceReport FIFO();
     PerformanceReport ARB(const int interval = 1);
-    // PerformanceReport EnhancedSecondChance();
+    PerformanceReport SecondChance();
+    PerformanceReport EnhancedSecondChance();
+    PerformanceReport Optimal();
 
 private:
     PerformanceReport performance;
@@ -33,6 +35,8 @@ private:
     string fileName;
     vector<vector<int>> pages;
     
+    // Member funciotns
+    int predict(const int index, const vector<int> &memory); // Find a victim for optimal
     int findMinRefBit(const vector<int> &memory, unordered_map<int, Bits> &memortBits); // Find a victim for ARB
     void updateARB(const vector<int> &memory, unordered_map<int, Bits> &memortBits, unordered_set<int> &memoryHit); // For ARB
 };
