@@ -16,7 +16,7 @@ ReferenceStringGenerator::ReferenceStringGenerator(
     referenceDst(1, referenceSize), 
     probabilityDst(0, 1) {}
 
-void ReferenceStringGenerator::RandomPick(const int p_referenceRange, const string &fileName) {
+void ReferenceStringGenerator::UniformRandom(const int p_referenceRange, const string &fileName) {
     uniform_int_distribution<int> rangeDst(1, p_referenceRange);
     vector<pair<int, int>> referenceString;
     int p_dataSize = dataSize;
@@ -36,7 +36,7 @@ void ReferenceStringGenerator::RandomPick(const int p_referenceRange, const stri
     GenerateStringFile(referenceString, fileName);
 }
 
-void ReferenceStringGenerator::LocalitySimulate(const int p_referenceRange, const double subsetRateA, const double subsetRateB, const string &fileName) {
+void ReferenceStringGenerator::LocalityUniformRandom(const int p_referenceRange, const double subsetRateA, const double subsetRateB, const string &fileName) {
     vector<pair<int, int>> referenceString;
     int p_dataSize = dataSize;
     uniform_int_distribution<int> rangeDst(1, p_referenceRange);
@@ -58,6 +58,52 @@ void ReferenceStringGenerator::LocalitySimulate(const int p_referenceRange, cons
     } while (p_dataSize > 0);
 
     GenerateStringFile(referenceString, fileName);
+}
+
+void ReferenceStringGenerator::NormalRandom(const int mean, const int standardDeviation, const string &fileName) {
+    normal_distribution<float> referenceDst(mean, standardDeviation);
+    
+    int p_dataSize = dataSize;
+    ofstream file(fileName);
+    while (p_dataSize--) {
+        int ref = 0;
+        while (ref < 1 || ref > referenceSize) {ref = referenceDst(generator);}
+        const int dirtyBit = probabilityDst(generator) <= dirtyRate ? 1 : 0;
+        file << ref << " " << dirtyBit << endl;
+    }
+    file.close();
+}
+
+void ReferenceStringGenerator::ExponentialRandom(const double lambda, const string& fileName) {
+    exponential_distribution<float> referenceDst(lambda);
+
+    int p_dataSize = dataSize;
+    ofstream file(fileName);
+    while (p_dataSize--) {
+        int ref = 0;
+        while (ref < 1 || ref > referenceSize) {
+            ref = static_cast<int>(referenceDst(generator));
+        }
+        const int dirtyBit = probabilityDst(generator) <= dirtyRate ? 1 : 0;
+        file << ref << " " << dirtyBit << endl;
+    }
+    file.close();
+}
+
+void ReferenceStringGenerator::PoissonRandom(const double lambda, const string& fileName) {
+    poisson_distribution<int> referenceDst(lambda);
+
+    int p_dataSize = dataSize;
+    ofstream file(fileName);
+    while (p_dataSize--) {
+        int ref = 0;
+        while (ref < 1 || ref > referenceSize) {
+            ref = referenceDst(generator);
+        }
+        const int dirtyBit = probabilityDst(generator) <= dirtyRate ? 1 : 0;
+        file << ref << " " << dirtyBit << endl;
+    }
+    file.close();
 }
 
 void ReferenceStringGenerator::GenerateStringFile(vector<pair<int, int>> referenceString, const string &fileName) {

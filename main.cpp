@@ -14,18 +14,22 @@ int main(int argc, const char * argv[]) {
     const double subsetRateB = 1.0 / 20.0;
     int referenceRange = 20;
     double setSize = 20;
+    double lambda = 1.0 / referenceSize; // 期望平均值與參考字串的大小 (Ref. size) 相關
 
     vector<int> memorySize = {20, 40, 60, 80, 100}; // Number of frames in the physical memory
-    vector<string> fileName = {"random_reference_string.txt", "locality_reference_string.txt"};
-    vector<string> algorithmName = {"FIFO", "SecondChance", "EnhancedSecondChance", "Optimal", "ARB"}; // {"FIFO", "ARB"}
+    vector<string> fileName = {"uniform_reference_string.txt", "locality_reference_string.txt", "normal_reference_string.txt", "exponential_reference_string.txt"}; // 
+    vector<string> algorithmName = {"FIFO", "SecondChance", "EnhancedSecondChance", "Optimal", "ARB"};
 
     // generate three test reference strings:
     ReferenceStringGenerator generator(dataSize, referenceSize, dirtyRate);
     // Random: Arbitrarily pick [1, 20] continuous numbers for each reference.
-    generator.RandomPick(referenceRange, "random_reference_string.txt");
+    generator.UniformRandom(referenceRange, "uniform_reference_string.txt");
     // Locality: Simulate function calls. Each function call may refer a subset of 1/30~1/20 string
-    generator.LocalitySimulate(referenceRange, subsetRateA, subsetRateB, "locality_reference_string.txt");
+    generator.LocalityUniformRandom(referenceRange, subsetRateA, subsetRateB, "locality_reference_string.txt");
     
+    generator.NormalRandom(referenceSize / 2, referenceSize / setSize, "normal_reference_string.txt");
+    generator.ExponentialRandom(lambda, "exponential_reference_string.txt");
+
     // init performance report and page replacement objects;
     PerformanceReport performance;
     PageReplacement pageReplacement(memorySize[0], fileName[0]);
