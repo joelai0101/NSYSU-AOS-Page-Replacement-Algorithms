@@ -42,7 +42,7 @@ void ReferenceStringGenerator::LocalityUniformRandom(const int p_referenceRange,
     uniform_int_distribution<int> rangeDst(1, p_referenceRange);
     uniform_int_distribution<int> subsetDst(dataSize * subsetRateA, dataSize * subsetRateB);
         
-    do{
+    do {
         const int referenceHead = referenceDst(generator);
         const int range = rangeDst(generator);
         uniform_int_distribution<int> localDst(referenceHead, min(referenceHead + range, referenceSize));
@@ -61,13 +61,13 @@ void ReferenceStringGenerator::LocalityUniformRandom(const int p_referenceRange,
 }
 
 void ReferenceStringGenerator::NormalRandom(const int mean, const int standardDeviation, const string &fileName) {
-    normal_distribution<float> referenceDst(mean, standardDeviation);
+    normal_distribution<double> referenceDst(mean, standardDeviation);
     
     int p_dataSize = dataSize;
     ofstream file(fileName);
     while (p_dataSize--) {
         int ref = 0;
-        while (ref < 1 || ref > referenceSize) {ref = referenceDst(generator);}
+        while (ref < 1 || ref > referenceSize) { ref = referenceDst(generator); }
         const int dirtyBit = probabilityDst(generator) <= dirtyRate ? 1 : 0;
         file << ref << " " << dirtyBit << endl;
     }
@@ -75,7 +75,7 @@ void ReferenceStringGenerator::NormalRandom(const int mean, const int standardDe
 }
 
 void ReferenceStringGenerator::ExponentialRandom(const double lambda, const string& fileName) {
-    exponential_distribution<float> referenceDst(lambda);
+    exponential_distribution<double> referenceDst(lambda);
 
     int p_dataSize = dataSize;
     ofstream file(fileName);
