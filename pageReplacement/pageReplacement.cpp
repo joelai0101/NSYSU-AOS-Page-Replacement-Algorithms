@@ -158,6 +158,7 @@ PerformanceReport PageReplacement::EnhancedSecondChance() {
     deque<int> memoryPageFrames;
     unordered_set<int> memorySet;
     unordered_map<int, Bits> memoryMap;
+    int counter = 0; // used for second 
 
     // Execute Enhanced Second Chance algorithm
     for (const auto &p : pages) {
@@ -179,28 +180,30 @@ PerformanceReport PageReplacement::EnhancedSecondChance() {
                 
                 // Find the victim page based on the preference order
                 // Perform up to four passes over the circular queue, considering pages in each class at a time.
-                for (int i = 0; i < 4; ++i) {
-                    for (const auto &page : memoryPageFrames) {
-                        Bits bits = memoryMap[page];
-                        
-                        // Choose the first page encountered in the lowest nonempty class.
-                        if (bits.ref == (i / 2) % 2 && bits.dirty == i % 2) {
-                            victim = page;
+                while (!foundVictim && counter < 4) {
+                    for (auto &it : memoryPageFrames) {
+                        if (counter == 0 && memoryMap[it].ref == 0 && memoryMap[it].dirty == 0) {
+                            victim = it;
                             foundVictim = true;
                             break;
-                        } else { // Second Chance
-                            memoryMap[victim].ref = 0;
+                        } else if (counter == 1 && memoryMap[it].ref == 0 && memoryMap[it].dirty == 1) {
+                            victim = it;
+                            foundVictim = true;
+                            break;
+                        } else if (counter == 2 && memoryMap[it].ref == 1 && memoryMap[it].dirty == 0) {
+                            memoryMap[it].ref = 0;
                             memoryPageFrames.pop_front();
-                            memoryPageFrames.push_back(victim);
+                            memoryPageFrames.push_back(it);
+                        } else if (counter == 3 && memoryMap[it].ref == 1 && memoryMap[it].dirty == 1) {
+                            memoryMap[it].ref = 0;
+                            memoryPageFrames.pop_front();
+                            memoryPageFrames.push_back(it);
                         }
                         
                     }
-
-                    if (foundVictim) {
-                        break;
-                    }
+                    counter++;
                 }
-
+                counter = 0;
                 memoryPageFrames.pop_front();
                 memorySet.erase(victim);
 
