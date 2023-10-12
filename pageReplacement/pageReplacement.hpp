@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_set>
 #include <unordered_map>
+#include <queue>
 
 using namespace std;
 
@@ -36,9 +37,11 @@ private:
     vector<vector<int>> pages;
     
     // Member functions
-    int predict(const int index, const vector<int> &memory); // Find a victim for optimal
-    int findMinRefBit(const vector<int> &memory, unordered_map<int, Bits> &memortBits); // Find a victim for ARB
-    void updateARB(const vector<int> &memory, unordered_map<int, Bits> &memortBits, unordered_set<int> &memoryHit); // For ARB
+    int SecondChanceVictim(const int index, deque<int> &memory, unordered_map<int, Bits> &memoryMap);
+    int ESCVictim(const int index, deque<int> &memory, unordered_map<int, Bits> &memoryMap);
+    int OptimalPredict(const int index, const vector<int> &memory); // Find a victim for optimal
+    int FindMinRefBit(const vector<int> &memory, unordered_map<int, Bits> &memortBits); // Find a victim for ARB
+    void UpdateARB(const vector<int> &memory, unordered_map<int, Bits> &memortBits, unordered_set<int> &memoryHit); // For ARB
 };
 
 #endif // __pageReplacement__

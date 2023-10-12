@@ -6,7 +6,7 @@
 
 using namespace std;
 
-void printQueue(queue<int> q){
+void printQueue(queue<int> q) {
     if (q.size() != 0) {
         do {
             cout << q.front() << " "; q.pop();
@@ -58,12 +58,15 @@ PerformanceReport PageReplacement::FIFO() {
 
         // Check if the page exists in memory with Hash Set
         if (memorySet.find(pageNumber) == memorySet.end()) { 
+            ++performance.pageFaults;  // Page fault occurs when the page is not found in memory.
+            ++performance.interrupts;  // An interrupt is generated when a page fault occurs.
+
             if (memoryPageFrames.size() < memorySize) {
                 // A memory isn't full and the page isn't found in the memory.
                 // Add a new page into the memory.
                 memoryPageFrames.push(pageNumber);
                 memorySet.insert(pageNumber);
-                memoryMap[pageNumber] = {1, dirty};
+                memoryMap[pageNumber] = {0, dirty};  // Set the dirty bit according to the input.
             } else {
                 // A memory is full and the page isn't found in the memory.
                 // Choose and Remove a victim page from the memory.
@@ -72,22 +75,21 @@ PerformanceReport PageReplacement::FIFO() {
                 memorySet.erase(victim);
 
                 if (memoryMap[victim].dirty == 1) { // Write back into the disk.
-                    ++performance.interrupts;
                     ++performance.diskWrites;
+                    memoryMap[victim].dirty = 0;
                 }
-
-                memoryMap[victim] = {0, 0}; // Set reference and dirty bit to 0
 
                 // Add a new page into the memory.
                 memoryPageFrames.push(pageNumber);
                 memorySet.insert(pageNumber);
-                memoryMap[pageNumber] = {1, dirty};
+                memoryMap[pageNumber] = {0, dirty};  // Set the dirty bit according to the input.
             }
-
-            ++performance.pageFaults;
-            // Need to write into the disk
-        } else if (memoryMap[pageNumber].dirty == 0 && dirty == 1) { 
-            memoryMap[pageNumber].dirty = dirty; 
+        } else {
+            // The page is found in memory. Set its reference bit to 1.
+            memoryMap[pageNumber].ref = 1;
+            if (memoryMap[pageNumber].dirty == 0 && dirty == 1) { 
+                memoryMap[pageNumber].dirty = dirty; 
+            }
         }
         
         // printQueue(memoryPageFrames);
@@ -110,40 +112,48 @@ PerformanceReport PageReplacement::SecondChance() {
 
         // Check if the page exists in memory with Hash Set
         if (memorySet.find(pageNumber) == memorySet.end()) { 
+            ++performance.pageFaults;  // Page fault occurs when the page is not found in memory.
+            ++performance.interrupts;  // An interrupt is generated when a page fault occurs.
+
             if (memoryPageFrames.size() < memorySize) {
                 memoryPageFrames.push_back(pageNumber);
                 memorySet.insert(pageNumber);
-                memoryMap[pageNumber] = {1, dirty};
+                // 將其參考位元設為 1 是因為該頁面剛被加載到記憶體中，所以我們假設它將被立即使用。
+                memoryMap[pageNumber] = {1, dirty}; 
             } else {
                 // A memory is full and the page isn't found in the memory.
                 // Choose and Remove a victim page from the memory.
 
-                int victim = memoryPageFrames.front(); // FIFO
-                while (memoryMap[victim].ref == 1) { // Second Chance
-                    memoryMap[victim].ref = 0;
-                    memoryPageFrames.pop_front();
-                    memoryPageFrames.push_back(victim);
+                while (true) {
+                    int victim = memoryPageFrames.front(); // FIFO
+
+                    if (memoryMap[victim].ref == 0) {  // If the reference bit is 0, remove it.
+                        if (memoryMap[victim].dirty == 1) { // Write back into the disk.
+                            ++performance.diskWrites;
+                            memoryMap[victim].dirty = 0;
+                        }
+
+                        memoryPageFrames.pop_front();
+                        memorySet.erase(victim);
+                        break;
+                    } else {  // If the reference bit is 1, give it a second chance and move it to the back of the queue.
+                        memoryMap[victim].ref = 0;
+                        memoryPageFrames.pop_front();
+                        memoryPageFrames.push_back(victim);
+                    }
                 }
-                
-                memoryPageFrames.pop_front();
-                memorySet.erase(victim);
 
-                if (memoryMap[victim].dirty == 1) { // Write back into the disk.
-                    ++performance.interrupts;
-                    ++performance.diskWrites;
-                }
-
-                memoryMap[victim] = {0, 0};
-
+                // Add a new page into the memory.
                 memoryPageFrames.push_back(pageNumber);
                 memorySet.insert(pageNumber);
-                memoryMap[pageNumber] = {1, dirty};
+                memoryMap[pageNumber] = {1, dirty}; 
             }
-
-            ++performance.pageFaults;
-            // Need to write into the disk
-        } else if (memoryMap[pageNumber].dirty == 0 && dirty == 1) { 
-            memoryMap[pageNumber].dirty = dirty; 
+        } else {
+            // The page is found in memory. Set its reference bit to 1.
+            memoryMap[pageNumber].ref = 1;
+            if (memoryMap[pageNumber].dirty == 0 && dirty == 1) { 
+                memoryMap[pageNumber].dirty = dirty; 
+            }
         }
         
         // printQueue(memoryPageFrames);
@@ -167,10 +177,14 @@ PerformanceReport PageReplacement::EnhancedSecondChance() {
 
         // Check if the page exists in memory with Hash Set
         if (memorySet.find(pageNumber) == memorySet.end()) { 
+            ++performance.pageFaults;  // Page fault occurs when the page is not found in memory.
+            ++performance.interrupts;  // An interrupt is generated when a page fault occurs.
+
             if (memoryPageFrames.size() < memorySize) {
                 memoryPageFrames.push_back(pageNumber);
                 memorySet.insert(pageNumber);
-                memoryMap[pageNumber] = {1, dirty};
+                // 將其參考位元設為 0 可以提高其被替換的可能
+                memoryMap[pageNumber] = {0, dirty};
             } else {
                 // A memory is full and the page isn't found in the memory.
                 // Choose and Remove a victim page from the memory.
@@ -203,27 +217,28 @@ PerformanceReport PageReplacement::EnhancedSecondChance() {
                     }
                     counter++;
                 }
-                counter = 0;
+                
+                if (memoryMap[victim].dirty == 1) { // Write back into the disk.
+                    ++performance.diskWrites;
+                    memoryMap[victim].dirty = 0;
+                }
+
                 memoryPageFrames.pop_front();
                 memorySet.erase(victim);
 
-                if (memoryMap[victim].dirty == 1) { // Write back into the disk.
-                    ++performance.interrupts;
-                    ++performance.diskWrites;
-                }
-
-                memoryMap[victim] = {0, 0};
-
+                // Add a new page into the memory.
                 memoryPageFrames.push_back(pageNumber);
                 memorySet.insert(pageNumber);
-                memoryMap[pageNumber] = {1, dirty};
+                memoryMap[pageNumber] = {0, dirty};
                 
             }
 
-            ++performance.pageFaults;
-            // Need to write into the disk
-        } else if (memoryMap[pageNumber].dirty == 0 && dirty == 1) { 
-            memoryMap[pageNumber].dirty = dirty; 
+        } else {
+            // The page is found in memory. Set its reference bit to 1.
+            memoryMap[pageNumber].ref = 1;
+            if (memoryMap[pageNumber].dirty == 0 && dirty == 1) { 
+                memoryMap[pageNumber].dirty = dirty; 
+            }
         }
         
         // printQueue(memoryPageFrames);
@@ -248,18 +263,20 @@ PerformanceReport PageReplacement::Optimal() {
             if (memoryPageFrames.size() < memorySize) {
                 memoryPageFrames.push_back(pageNumber);
 
-                memoryMap[pageNumber] = {1, dirty};
+                memoryMap[pageNumber] = {0, dirty};
             } else {
 
-                const int j = predict(i + 1, memoryPageFrames);
+                const int j = OptimalPredict(i + 1, memoryPageFrames);
                 int victim = memoryPageFrames[j];
-                memoryPageFrames[j] = pageNumber;
-                memoryMap[pageNumber] = {1, dirty};
+                
                 if (memoryMap[victim].dirty == 1) {
                     ++performance.diskWrites;
                     ++performance.interrupts;
                 }
+
                 memoryMap[victim] = {0, 0};
+                memoryPageFrames[j] = pageNumber;
+                memoryMap[pageNumber] = {0, dirty};
             }
             ++performance.pageFaults;
         } else if (memoryMap[pageNumber].dirty == 0 && dirty == 1) { 
@@ -271,7 +288,7 @@ PerformanceReport PageReplacement::Optimal() {
 }
 
 // Find a victim for optimal
-int PageReplacement::predict(const int index, const vector<int> &memory){
+int PageReplacement::OptimalPredict(const int index, const vector<int> &memory){
     int pre = -1, farthest = index;
     for (int i = 0; i < memory.size(); ++i) {
         int j;
@@ -286,7 +303,7 @@ int PageReplacement::predict(const int index, const vector<int> &memory){
             }
         }
         // If a page is never used in future, return it.
-        if (j == pages.size()) {return i;}
+        if (j == pages.size()) { return i; }
     }
     // If all of the frames were not in future, return any of them, we return 0.
     // Otherwise we return pre.
@@ -324,7 +341,7 @@ PerformanceReport PageReplacement::ARB(const int interval) {
                 // We should choose and remove a victim page from the memory.
                 // To get and remove a victim with the least significant bit (LSB) (that is, the least referenced page),
                 // We need to know the position of the minimal reference bit
-                const int j = findMinRefBit(memoryPageFrames, memoryMap);
+                const int j = FindMinRefBit(memoryPageFrames, memoryMap);
                 int victim = memoryPageFrames[j];
                 
                 // replace the victim with new page
@@ -351,7 +368,7 @@ PerformanceReport PageReplacement::ARB(const int interval) {
         // Update the reference bit of all pages in the memory.
         if (++count == interval) {
             count = 0;
-            updateARB(memoryPageFrames ,memoryMap, memoryHits);
+            UpdateARB(memoryPageFrames ,memoryMap, memoryHits);
             if (!isInterrupt) { ++performance.interrupts; }
         }
     }
@@ -360,7 +377,7 @@ PerformanceReport PageReplacement::ARB(const int interval) {
 }
 
 // Find a victim for ARB
-int PageReplacement::findMinRefBit(const vector<int> &memoryPageFrames, unordered_map<int, Bits> &memoryMap) {
+int PageReplacement::FindMinRefBit(const vector<int> &memoryPageFrames, unordered_map<int, Bits> &memoryMap) {
     int min = 256; // 8-bit information
     int minIndex = 0;
     // iterate through all page frames in the memory
@@ -374,7 +391,7 @@ int PageReplacement::findMinRefBit(const vector<int> &memoryPageFrames, unordere
     return minIndex;
 }
 
-void PageReplacement::updateARB(const vector<int> &memoryPageFrames, unordered_map<int, Bits> &memoryMap, unordered_set<int> &memoryHits) {
+void PageReplacement::UpdateARB(const vector<int> &memoryPageFrames, unordered_map<int, Bits> &memoryMap, unordered_set<int> &memoryHits) {
     // Shift right the reference bit of all pages in the memory by 1 bit.
     for (const auto fm : memoryPageFrames) { memoryMap[fm].ref >>= 1; }
     
