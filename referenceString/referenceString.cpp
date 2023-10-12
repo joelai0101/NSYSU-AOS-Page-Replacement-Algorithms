@@ -90,22 +90,6 @@ void ReferenceStringGenerator::ExponentialRandom(const double lambda, const stri
     file.close();
 }
 
-void ReferenceStringGenerator::PoissonRandom(const double lambda, const string& fileName) {
-    poisson_distribution<int> referenceDst(lambda);
-
-    int p_dataSize = dataSize;
-    ofstream file(fileName);
-    while (p_dataSize--) {
-        int ref = 0;
-        while (ref < 1 || ref > referenceSize) {
-            ref = referenceDst(generator);
-        }
-        const int dirtyBit = probabilityDst(generator) <= dirtyRate ? 1 : 0;
-        file << ref << " " << dirtyBit << endl;
-    }
-    file.close();
-}
-
 void ReferenceStringGenerator::GenerateStringFile(vector<pair<int, int>> referenceString, const string &fileName) {
     // Write the reference string and dirty bit to the output file.
     ofstream file(fileName);

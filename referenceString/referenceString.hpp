@@ -16,7 +16,6 @@ public:
     void LocalityUniformRandom(const int p_referenceRange, const double subsetRateA = 1.0 / 30.0, const double subsetRateB = 1.0 / 20.0, const string &fileName = "locality_reference_string.txt");
     void NormalRandom(const int mean, const int standardDeviation, const string &fileName = "normal_reference_string.txt");
     void ExponentialRandom(const double lambda, const string& fileName = "exponential_reference_string.txt");
-    void PoissonRandom(const double lambda, const string& fileName = "poisson_reference_string.txt");
 
 private:
     int referenceSize; // page Reference string: 1~1,000
