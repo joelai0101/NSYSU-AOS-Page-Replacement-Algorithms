@@ -68,7 +68,7 @@ PerformanceReport PageReplacement::FIFO() {
                 // A memory is full and the page isn't found in the memory.
                 // Choose and Remove a victim page from the memory.
                 // that is, the page that entered the queue earliest.
-                const int victim = memoryPageFrames.front(); memoryPageFrames.pop();
+                int victim = memoryPageFrames.front(); memoryPageFrames.pop();
                 memorySet.erase(victim);
 
                 if (memoryMap[victim].dirty == 1) { // Write back into the disk.
@@ -118,8 +118,8 @@ PerformanceReport PageReplacement::SecondChance() {
                 // A memory is full and the page isn't found in the memory.
                 // Choose and Remove a victim page from the memory.
 
-                const int victim = memoryPageFrames.front(); // FIFO
-                while (memoryMap[victim].ref == 1) {
+                int victim = memoryPageFrames.front(); // FIFO
+                while (memoryMap[victim].ref == 1) { // Second Chance
                     memoryMap[victim].ref = 0;
                     memoryPageFrames.pop_front();
                     memoryPageFrames.push_back(victim);
@@ -174,27 +174,34 @@ PerformanceReport PageReplacement::EnhancedSecondChance() {
                 // A memory is full and the page isn't found in the memory.
                 // Choose and Remove a victim page from the memory.
 
-                // Memory is full and the page isn't found in the memory.
-                // Choose and remove a victim page from the memory.
-                int victim = -1;
-                unsigned int minOrderPair = UINT_MAX;
+                int victim = memoryPageFrames.front(); // FIFO
+                bool foundVictim = false;
+                
+                // Find the victim page based on the preference order
+                // Perform up to four passes over the circular queue, considering pages in each class at a time.
+                for (int i = 0; i < 4; ++i) {
+                    for (const auto &page : memoryPageFrames) {
+                        Bits bits = memoryMap[page];
+                        
+                        // Choose the first page encountered in the lowest nonempty class.
+                        if (bits.ref == (i / 2) % 2 && bits.dirty == i % 2) {
+                            victim = page;
+                            foundVictim = true;
+                            break;
+                        } else { // Second Chance
+                            memoryMap[victim].ref = 0;
+                            memoryPageFrames.pop_front();
+                            memoryPageFrames.push_back(victim);
+                        }
+                        
+                    }
 
-                for (int page : memoryPageFrames) {
-                    Bits bits = memoryMap[page];
-                    unsigned int orderPair = (bits.ref << 1) | bits.dirty;
-
-                    if (orderPair < minOrderPair) {
-                        victim = page;
-                        minOrderPair = orderPair;
+                    if (foundVictim) {
+                        break;
                     }
                 }
-                
-                // If multiple pages have the same minimum order pair, choose the victim based on FIFO.
-                if (victim == -1) {
-                    victim = memoryPageFrames.front();
-                }
 
-                // Remove the victim page from memory.
+                memoryPageFrames.pop_front();
                 memorySet.erase(victim);
 
                 if (memoryMap[victim].dirty == 1) { // Write back into the disk.
@@ -207,6 +214,7 @@ PerformanceReport PageReplacement::EnhancedSecondChance() {
                 memoryPageFrames.push_back(pageNumber);
                 memorySet.insert(pageNumber);
                 memoryMap[pageNumber] = {1, dirty};
+                
             }
 
             ++performance.pageFaults;
@@ -241,7 +249,7 @@ PerformanceReport PageReplacement::Optimal() {
             } else {
 
                 const int j = predict(i + 1, memoryPageFrames);
-                const int victim = memoryPageFrames[j];
+                int victim = memoryPageFrames[j];
                 memoryPageFrames[j] = pageNumber;
                 memoryMap[pageNumber] = {1, dirty};
                 if (memoryMap[victim].dirty == 1) {
@@ -314,7 +322,7 @@ PerformanceReport PageReplacement::ARB(const int interval) {
                 // To get and remove a victim with the least significant bit (LSB) (that is, the least referenced page),
                 // We need to know the position of the minimal reference bit
                 const int j = findMinRefBit(memoryPageFrames, memoryMap);
-                const int victim = memoryPageFrames[j];
+                int victim = memoryPageFrames[j];
                 
                 // replace the victim with new page
                 memoryPageFrames[j] = pageNumber;

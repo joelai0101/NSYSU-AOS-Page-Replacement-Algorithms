@@ -35,7 +35,7 @@ private:
     string fileName;
     vector<vector<int>> pages;
     
-    // Member funciotns
+    // Member functions
     int predict(const int index, const vector<int> &memory); // Find a victim for optimal
     int findMinRefBit(const vector<int> &memory, unordered_map<int, Bits> &memortBits); // Find a victim for ARB
     void updateARB(const vector<int> &memory, unordered_map<int, Bits> &memortBits, unordered_set<int> &memoryHit); // For ARB
