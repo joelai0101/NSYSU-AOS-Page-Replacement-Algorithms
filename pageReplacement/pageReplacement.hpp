@@ -29,6 +29,8 @@ public:
     PerformanceReport SecondChance();
     PerformanceReport EnhancedSecondChance();
     PerformanceReport Optimal();
+    PerformanceReport LRU();
+    PerformanceReport LRU_MFU();
 
 private:
     PerformanceReport performance;
