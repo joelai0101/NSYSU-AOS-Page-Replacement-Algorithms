@@ -43,10 +43,10 @@ void ReferenceStringGenerator::LocalityUniformRandom(const int p_referenceRange,
     uniform_int_distribution<int> subsetDst(dataSize * subsetRateA, dataSize * subsetRateB);
         
     do {
-        const int referenceHead = referenceDst(generator);
-        const int range = rangeDst(generator);
+        const int referenceHead = referenceDst(generator); // 選擇一個參考點 referenceHead，
+        const int range = rangeDst(generator); // 然後在該參考點和 referenceHead + range 之間隨機選擇一個子集。
         uniform_int_distribution<int> localDst(referenceHead, min(referenceHead + range, referenceSize));
-        const int subsetSize = min(subsetDst(generator), p_dataSize);
+        const int subsetSize = min(subsetDst(generator), p_dataSize); // 子集的大小由 subsetDst(generator) 決定，
 
         for (int i = 0; i < subsetSize; ++i) {
             int dirtyBit = probabilityDst(generator) <= dirtyRate ? 1 : 0;
