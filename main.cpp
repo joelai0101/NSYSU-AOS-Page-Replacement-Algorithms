@@ -12,7 +12,7 @@ int main(int argc, const char * argv[]) {
     const double dirtyRate = 0.5;
     const double subsetRateA = 1.0 / 30.0;
     const double subsetRateB = 1.0 / 20.0;
-    const int interval = 100;
+    const int interval = 1000;
     int UniformReferenceRange = 20, LocalityReferenceRange = 100;
     double setSize = 20.0;
     double lambda = 1.0 / referenceSize; // 期望平均值與參考字串的大小 (Ref. size) 相關
