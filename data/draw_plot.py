@@ -3,6 +3,7 @@
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import os
 
 title = ["algorithmName", "referenceStringName", "memorySize", "pageFaults", "interrupts", "diskWrites"]
 algorithmName = ["FIFO", "ARB", "ESC", "LRU-MFU"]
@@ -15,6 +16,12 @@ font = {'family' : 'normal',
         'size'   : 18}
 
 plt.rc('font', **font)
+
+imgPath = 'img/'
+isExist = os.path.exists(imgPath)
+if not isExist:
+    os.makedirs(imgPath)
+    print("create img directory")
 
 # 1. The plots between performance and frames each algorithm.
 for i in range(4) : # of algorithm
