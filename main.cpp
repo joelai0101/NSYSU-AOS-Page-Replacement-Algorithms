@@ -18,7 +18,7 @@ int main(int argc, const char * argv[]) {
 
     vector<int> memorySize = {20, 40, 60, 80, 100}; // Number of frames in the physical memory
     vector<string> fileName = {"uniform_reference_string.txt", "locality_reference_string.txt", "normal_reference_string.txt", "exponential_reference_string.txt"}; // 
-    vector<string> algorithmName = {"FIFO", "SecondChance", "EnhancedSecondChance", "Optimal", "ARB"}; //  
+    vector<string> algorithmName = {"FIFO", "SecondChance", "ESC", "LRU", "LRU-MFU", "ARB", "Optimal"}; //  
 
     // generate three test reference strings:
     ReferenceStringGenerator generator(dataSize, referenceSize, dirtyRate);
@@ -59,7 +59,11 @@ int main(int argc, const char * argv[]) {
             performance.printReport();
             performance.writeCsvReport(fileName[i], memorySize[j]);
 
-            performance = pageReplacement.Optimal();
+            performance = pageReplacement.LRU();
+            performance.printReport();
+            performance.writeCsvReport(fileName[i], memorySize[j]);
+
+            performance = pageReplacement.LRU_MFU();
             performance.printReport();
             performance.writeCsvReport(fileName[i], memorySize[j]);
 
@@ -67,6 +71,9 @@ int main(int argc, const char * argv[]) {
             performance.printReport();
             performance.writeCsvReport(fileName[i], memorySize[j]);
 
+            performance = pageReplacement.Optimal();
+            performance.printReport();
+            performance.writeCsvReport(fileName[i], memorySize[j]);
         }
     }
 
