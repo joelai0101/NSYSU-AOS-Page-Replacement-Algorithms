@@ -343,7 +343,7 @@ PerformanceReport PageReplacement::ARB(const int interval) {
                 // Add a new page into the memory.
                 memoryPageFrames.push_back(pageNumber);
                 // The most significant bit (MSB) of a page that has been referenced recently will be '1'
-                bitMap[pageNumber] = {(1 << 7), dirty}; // 128 = 2^8 = 1000 0000(8-bit number)
+                bitMap[pageNumber] = {(1 << 7), dirty}; // 128 = 2^7 = 1000 0000(8-bit number)
             } else {
                 // A memory is full and the page isn't found in the memory.
                 // We should choose and remove a victim page from the memory.
