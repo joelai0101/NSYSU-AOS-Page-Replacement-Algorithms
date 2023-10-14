@@ -7,16 +7,20 @@ using namespace std;
 
 class PerformanceReport {
 public:
+
     void reset() {
         pageFaults = 0;
         interrupts = 0;
         diskWrites = 0;
         algorithmName = "";
     }
-    
+
     void printReport(const int n = 1);
-    
-    int pageFaults, interrupts, diskWrites;
+
+    void writeCsvReport(const string referenceStringName, int memorySize);
+
+    int memorySize, pageFaults, interrupts, diskWrites;
+    bool hasHeader = false;
     string algorithmName;
 };
 
