@@ -165,7 +165,7 @@ PerformanceReport PageReplacement::SecondChance() {
 
 PerformanceReport PageReplacement::EnhancedSecondChance() {
     performance.reset();
-    performance.algorithmName = "Enhanced Second Chance";
+    performance.algorithmName = "ESC";
     deque<int> memoryPageFrames;
     unordered_set<int> memorySet;
     unordered_map<int, Bits> bitMap;
@@ -320,7 +320,7 @@ int PageReplacement::OptimalPredict(const int index, const vector<int> &memory) 
 // usually using 8 bits and updating the ARB for all pages in memory
 PerformanceReport PageReplacement::ARB(const int interval) {
     performance.reset();
-    performance.algorithmName = "Additional Reference Bits";
+    performance.algorithmName = "ARB";
     int count = 0;
     vector<int> memoryPageFrames; // A vector to store page frames in memory
     unordered_map<int, Bits> bitMap;
