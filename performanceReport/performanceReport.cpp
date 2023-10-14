@@ -1,8 +1,10 @@
 #include "performanceReport.hpp"
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
 using namespace std;
+namespace fs = std::__fs::filesystem;
 
 void PerformanceReport::printReport(const int n) {
     switch (n) {
@@ -23,6 +25,9 @@ void PerformanceReport::printReport(const int n) {
 void PerformanceReport::writeCsvReport(const string referenceStringName, int memorySize) {
     fstream csvFile;
     // cout << memorySize << endl; // check size
+    string dataDir = "../data";
+    fs::create_directory(dataDir);
+
     csvFile.open("../data/" + algorithmName + ".csv", ios::in | ios::app | ios::out);
     if (csvFile.is_open()) {
         csvFile.seekg(0, ios::end); // 檔案指標移到末尾
