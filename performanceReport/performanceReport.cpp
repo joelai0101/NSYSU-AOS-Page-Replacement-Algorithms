@@ -33,7 +33,7 @@ void PerformanceReport::writeCsvReport(const string referenceStringName, int mem
         csvFile.seekg(0, ios::end); // 檔案指標移到末尾
         streampos csvFileSize = csvFile.tellg(); // 取得指標位置，即檔案大小
         if (csvFileSize == 0) {
-            csvFile << "algorithmName" << ","<< referenceStringName << "," << "memorySize" << "," << "pageFaults" << "," << "interrupts" << "," << "diskWrites" << endl;
+            csvFile << "algorithmName" << ","<< "referenceStringName" << "," << "memorySize" << "," << "pageFaults" << "," << "interrupts" << "," << "diskWrites" << endl; // title name
             csvFile << algorithmName << ","<< referenceStringName << "," << memorySize << "," << pageFaults << "," << interrupts << "," << diskWrites << endl;
         } else {
             csvFile << algorithmName << "," << referenceStringName << "," << memorySize << "," << pageFaults << "," << interrupts << "," << diskWrites << endl;
