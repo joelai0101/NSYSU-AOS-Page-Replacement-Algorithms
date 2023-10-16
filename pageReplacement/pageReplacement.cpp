@@ -77,6 +77,7 @@ PerformanceReport PageReplacement::FIFO() {
 
                 if (bitMap[victim].dirty == 1) { // Write back into the disk.
                     ++performance.diskWrites;
+                    ++performance.interrupts;
                     bitMap[victim].dirty = 0;
                 }
 
@@ -131,6 +132,7 @@ PerformanceReport PageReplacement::SecondChance() {
                     if (bitMap[victim].ref == 0) {  // If the reference bit is 0, remove it.
                         if (bitMap[victim].dirty == 1) { // Write back into the disk.
                             ++performance.diskWrites;
+                            ++performance.interrupts;
                             bitMap[victim].dirty = 0;
                         }
 
@@ -221,6 +223,7 @@ PerformanceReport PageReplacement::EnhancedSecondChance() {
                 
                 if (bitMap[victim].dirty == 1) { // Write back into the disk.
                     ++performance.diskWrites;
+                    ++performance.interrupts;
                     bitMap[victim].dirty = 0;
                 }
 
@@ -274,6 +277,7 @@ PerformanceReport PageReplacement::Optimal() {
                 
                 if (bitMap[victim].dirty == 1) {
                     ++performance.diskWrites;
+                    ++performance.interrupts;
                     bitMap[victim].dirty = 0;
                 }
 
@@ -354,6 +358,7 @@ PerformanceReport PageReplacement::ARB(const int interval) {
                 
                 if (bitMap[victim].dirty == 1) {
                     ++performance.diskWrites;
+                    ++performance.interrupts;
                     bitMap[victim].dirty = 0;
                     isInterrupt = 1;
                 }
@@ -440,6 +445,7 @@ PerformanceReport PageReplacement::LRU() {
 
                 if (bitMap[victim].dirty == 1) { // Write back into the disk.
                     ++performance.diskWrites;
+                    ++performance.interrupts;
                     bitMap[victim].dirty = 0;
                 }
 
@@ -466,16 +472,16 @@ PerformanceReport PageReplacement::LRU() {
     return performance;
 }
 
-PerformanceReport PageReplacement::LRU_MFU() {
+PerformanceReport PageReplacement::LRU_LFU() {
     // init
     performance.reset();
-    performance.algorithmName = "LRU-MFU";
+    performance.algorithmName = "LRU-LFU";
     list<int> memoryPageFrames; // Simulate page frames in memory with list
     unordered_map<int, pair<list<int>::iterator, int>> memoryMap; // Track the position and frequency of each page frame in the list with unordered_map
     // <page number, <iterator, frequency>>
     unordered_map<int, Bits> bitsMap; // Track the reference bit and dirty bit of each page frame with unordered_map
 
-    // Execute LRU-MFU algorithm
+    // Execute LRU-LFU algorithm
     for (const auto &p : pages) {
         const int pageNumber = p[0];
         const int dirty = p[1];
@@ -495,7 +501,7 @@ PerformanceReport PageReplacement::LRU_MFU() {
                 bitsMap[pageNumber] = {0, dirty}; // Set the reference bit and dirty bit according to the input
             } else {
                 // A memory is full and the page isn't found in the memory.
-                // Choose and Remove a victim page from the list based on LRU-MFU policy.
+                // Choose and Remove a victim page from the list based on LRU-LFU policy.
                 int victim = -1; // The page number of the victim
                 int minFreq = INT_MAX; // The minimum frequency among the pages in memory
                 int minIndex = -1; // The index of the page with minimum frequency in the list
@@ -519,6 +525,7 @@ PerformanceReport PageReplacement::LRU_MFU() {
 
                 if (bitsMap[victim].dirty == 1) { // Write back into the disk.
                     ++performance.diskWrites;
+                    ++performance.interrupts;
                     bitsMap[victim].dirty = 0;
                 }
 
