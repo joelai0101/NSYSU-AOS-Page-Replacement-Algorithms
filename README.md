@@ -11,4 +11,15 @@ cmake ..
 make
 # 執行檔案
 ./main
+# 畫圖
+cd ../data
+python3 draw_plot.py
+```
+
+How to remove:
+
+```
+rm -rf build
+rm -rf data/*.csv
+rm -rf data/img
 ```
