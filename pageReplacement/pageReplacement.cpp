@@ -381,7 +381,7 @@ PerformanceReport PageReplacement::ARB(const int interval) {
         if (++count == interval) {
             count = 0;
             UpdateARB(memoryPageFrames, bitMap, memoryHits);
-            // if (!isInterrupt) { ++performance.interrupts; }
+            if (!isInterrupt) { ++performance.interrupts; }
         }
     }
 
@@ -435,6 +435,7 @@ PerformanceReport PageReplacement::LRU() {
                 // A memory isn't full and the page isn't found in the memory.
                 // Add a new page into the front of the list.
                 memoryPageFrames.push_front(pageNumber);
+                ++performance.interrupts;
                 posMap[pageNumber] = memoryPageFrames.begin(); // Store the iterator of the new page
                 bitMap[pageNumber] = {0, dirty};
             } else {
@@ -451,6 +452,7 @@ PerformanceReport PageReplacement::LRU() {
 
                 // Add a new page into the front of the list.
                 memoryPageFrames.push_front(pageNumber);
+                ++performance.interrupts;
                 posMap[pageNumber] = memoryPageFrames.begin(); // Store the iterator of the new page
                 bitMap[pageNumber] = {0, dirty};
             }
@@ -459,6 +461,8 @@ PerformanceReport PageReplacement::LRU() {
             auto it = posMap[pageNumber]; // Get the iterator of the existing page
             memoryPageFrames.erase(it); // Remove it from its current position
             memoryPageFrames.push_front(pageNumber); // Insert it to the front of the list
+            ++performance.interrupts;
+
             posMap[pageNumber] = memoryPageFrames.begin(); // Update the iterator of the existing page
             // Set its reference bit to 1.
             bitMap[pageNumber].ref = 1;
@@ -495,6 +499,7 @@ PerformanceReport PageReplacement::LRU_LFU() {
                 // A memory isn't full and the page isn't found in the memory.
                 // Add a new page into the front of the list with frequency 1.
                 memoryPageFrames.push_front(pageNumber);
+                ++performance.interrupts;
                 auto it = memoryPageFrames.begin(); // Store the iterator of the new page
                 int freq = 1; // Set the frequency of the new page to 1
                 memoryMap[pageNumber] = make_pair(it, freq); 
@@ -531,6 +536,7 @@ PerformanceReport PageReplacement::LRU_LFU() {
 
                 // Add a new page into the front of the list with frequency 1.
                 memoryPageFrames.push_front(pageNumber);
+                ++performance.interrupts;
                 auto it = memoryPageFrames.begin(); // Store the iterator of the new page
                 int freq = 1; // Set the frequency of the new page to 1
                 memoryMap[pageNumber] = make_pair(it, freq); 
@@ -542,6 +548,8 @@ PerformanceReport PageReplacement::LRU_LFU() {
             int freq = memoryMap[pageNumber].second; // Get the frequency of the existing page
             memoryPageFrames.erase(it); // Remove it from its current position
             memoryPageFrames.push_front(pageNumber); // Insert it to the front of the list
+            ++performance.interrupts;
+            
             ++freq; // Increase its frequency by 1
             memoryMap[pageNumber] = make_pair(memoryPageFrames.begin(), freq); // Update the iterator and frequency of the existing page
             // Set its reference bit to 1.
